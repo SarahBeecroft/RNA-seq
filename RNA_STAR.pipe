@@ -1,0 +1,130 @@
+genomeDir=/data/RNAseq/genome/STAR
+fastqDir=/data/RNAseq/data
+sampleName= ???
+junctions=/data/RNAseq/final.filtered.SJout.tab
+
+Star_1stPass = {
+	exec """
+  STAR --genomeDir $genomeDir
+--readFilesCommand zcat
+--readFilesIn `ls $fastqDir/*${input}*_L00*.fastq.gz | sort | tr "\n" "," |  sed 's/.$//'`
+--outSAMunmapped Within
+--outSAMmapqUnique 60
+--outSAMattributes NH HI AS NM MD
+--outFilterMultimapNmax 20
+--outFilterMismatchNmax 999
+--outFileNamePrefix ${output}.1stpass
+--alignIntronMin 20
+--alignIntronMax 1000000
+--alignMatesGapMax 1000000
+--limitSjdbInsertNsj 3000000
+--sjdbInsertSave basic
+--outFilterMismatchNoverReadLmax 0.05
+--alignSJoverhangMin 8
+--alignSJDBoverhangMin 1
+--sjdbScore 1
+--sjdbOverhang 149
+--outFilterScoreMinOverLread 0.33
+--outFilterMatchNminOverLread 0.33
+--alignSoftClipAtReferenceEnds No
+--chimJunctionOverhangMin 15
+--runThreadN 8
+--genomeLoad NoSharedMemory
+--limitBAMsortRAM 100000000000
+--outSAMstrandField intronMotif
+--outWigStrand Unstranded
+--outSAMtype BAM Unsorted
+--outSAMheaderHD @HD VN:1.4 SO:coordinate
+"""
+}
+
+Format_SJout_files = {
+	exec "cat *tab > all.SJout.tab"
+	exec "awk '$1!="MT"' all.SJout.tab | awk '$6~1' > final.filtered.SJout.tab"
+	exec "awk '$1!="MT"' all.SJout.tab | awk '$6~0' | awk 'int($7)>5' >> final.filtered.SJout.tab"
+}
+
+Create_new_genome = {
+	exec """
+  STAR --genomeDir $genomeDir
+	--readFilesCommand zcat
+	--readFilesIn `ls $fastqDir/*${input}*_L00*.fastq.gz | sort | tr "\n" "," |  sed 's/.$//'`
+	--outSAMunmapped Within
+	--outSAMmapqUnique 60
+	--outSAMattributes NH HI AS NM MD
+	--outFilterMultimapNmax 20
+	--outFilterMismatchNmax 999
+	--outFileNamePrefix ${output}.2ndpass
+	--alignIntronMin 20
+	--alignIntronMax 1000000
+	--alignMatesGapMax 1000000
+	--limitSjdbInsertNsj 3000000
+	--sjdbInsertSave all
+	--outFilterMismatchNoverReadLmax 0.05
+	--alignSJoverhangMin 8
+	--alignSJDBoverhangMin 1
+	--sjdbScore 1
+	--sjdbOverhang 149
+	--outFilterScoreMinOverLread 0.33
+	--outFilterMatchNminOverLread 0.33
+	--alignSoftClipAtReferenceEnds No
+	--chimJunctionOverhangMin 15
+	--runThreadN 8
+	--genomeLoad NoSharedMemory
+	--limitBAMsortRAM 100000000000
+	--outSAMstrandField intronMotif
+	--outWigStrand Unstranded
+	--outSAMtype BAM SortedByCoordinate
+	--outSAMheaderHD @HD VN:1.4 SO:coordinate
+	--sjdbFileChrStartEnd $junctions
+  """
+}
+
+align_samples_to_new_genome = {
+	exec "STAR --genomeDir $genomeDir
+	--readFilesCommand zcat
+	--readFilesIn `ls $fastqDir/*${input}*_L00*.fastq.gz | sort | tr "\n" "," |  sed 's/.$//'`
+	--outSAMunmapped Within
+	--outSAMmapqUnique 60
+	--outSAMattributes NH HI AS NM MD
+	--outFilterMultimapNmax 20
+	--outFilterMismatchNmax 999
+	--outFileNamePrefix ${output}.2ndpass
+	--alignIntronMin 20
+	--alignIntronMax 1000000
+	--alignMatesGapMax 1000000
+	--sjdbGTFfile /data/RNAseq/genome/STAR/
+	--limitSjdbInsertNsj 3000000
+	--sjdbInsertSave all
+	--outFilterMismatchNoverReadLmax 0.05
+	--alignSJoverhangMin 8
+	--alignSJDBoverhangMin 1
+	--sjdbScore 1
+	--sjdbOverhang 149
+	--outFilterScoreMinOverLread 0.33
+	--outFilterMatchNminOverLread 0.33
+	--alignSoftClipAtReferenceEnds No
+	--chimJunctionOverhangMin 15
+	--runThreadN 8
+	--genomeLoad NoSharedMemory
+	--limitBAMsortRAM 100000000000
+	--outSAMstrandField intronMotif
+	--outWigStrand Unstranded
+	--outSAMtype BAM SortedByCoordinate
+	--outSAMheaderHD @HD VN:1.4 SO:coordinate"
+} 
+ 
+ mark_duplicates = {
+ 		exec "java -Djava.io.tmpdir=/data/tmp -jar ~/bin/picard.jar MarkDuplicates
+    INPUT=${input}.bam
+    OUTPUT=${output}.sorted.deduped.bam
+    METRICS_FILE=${input}.sorted.deduped.metrics
+    CREATE_INDEX=TRUE
+    SORTING_COLLECTION_SIZE_RATIO=0.1
+    ASSUME_SORTED=TRUE
+    VALIDATION_STRINGENCY=LENIENT"
+}
+
+bpipe.run {
+  star_1stPass + Format_SJout_files + Create_new_genome + align_samples_to_new_genome + mark_duplicates
+}
