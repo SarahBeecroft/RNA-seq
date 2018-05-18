@@ -1,19 +1,18 @@
 genomeDir=/data/RNAseq/genome/STAR
 fastqDir=/data/RNAseq/data
-sampleName= ???
 junctions=/data/RNAseq/final.filtered.SJout.tab
 
 Star_1stPass = {
 	exec """
   STAR --genomeDir $genomeDir
 --readFilesCommand zcat
---readFilesIn `ls $fastqDir/*${input}*_L00*.fastq.gz | sort | tr "\n" "," |  sed 's/.$//'`
+--readFilesIn $input1,$input2,$input3,$input4
 --outSAMunmapped Within
 --outSAMmapqUnique 60
 --outSAMattributes NH HI AS NM MD
 --outFilterMultimapNmax 20
 --outFilterMismatchNmax 999
---outFileNamePrefix ${output}.1stpass
+--outFileNamePrefix $output.1stpass
 --alignIntronMin 20
 --alignIntronMax 1000000
 --alignMatesGapMax 1000000
@@ -125,6 +124,5 @@ align_samples_to_new_genome = {
     VALIDATION_STRINGENCY=LENIENT"
 }
 
-bpipe.run {
-  star_1stPass + Format_SJout_files + Create_new_genome + align_samples_to_new_genome + mark_duplicates
+bpipe.run { "01-****.fastq.gz" * [ star_1stPass + Format_SJout_files + Create_new_genome ] + "%_****.fastq.gz" * [align_samples_to_new_genome + mark_duplicates] ]
 }
