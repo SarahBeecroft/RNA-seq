@@ -1,6 +1,6 @@
 #!/bin/bash
 Gencode_genomeDir=/data/RNAseq/data/gencode_genome
-thread_N=4
+thread_N=3
 script_dir=/data/RNAseq/MendelianRNA-seq/Analysis
 processes_N=12
 ID_list=$(ls | grep 'fastq.gz' | cut -d'_' -f1 | uniq)
@@ -21,7 +21,7 @@ STAR --genomeDir $Gencode_genomeDir \
 --sjdbOverhang 149 \
 --alignSoftClipAtReferenceEnds No \
 --runThreadN $thread_N \
---limitBAMsortRAM 40000000000 \
+--limitBAMsortRAM 38000000000 \
 --outSAMtype BAM SortedByCoordinate \
 --outSAMunmapped Within \
 --outSAMmapqUnique 60 \
