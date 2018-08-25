@@ -11,3 +11,4 @@ This assumes you have generated the appropriate genome index files with STAR. if
 
 ## Note ##
 STAR is RAM intensive, and requires ~32GB for a human alignment. It will crash if you have less than that available. Also, if you are likely to change the number of threads, keep in mind that >4 threads will use >32GB of RAM. Do not increase thread number unless you have sufficient RAM available. This also means being careful about running other processes concurrently! I have a VM for RNA-seq alone. 
+you also need enough space for output files, ~100gb as a minimum
