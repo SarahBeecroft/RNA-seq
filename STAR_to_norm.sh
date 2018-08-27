@@ -32,7 +32,7 @@ STAR --genomeDir $Gencode_genomeDir \
 --alignIntronMax 1000000 \
 --alignMatesGapMax 1000000 \
 --limitSjdbInsertNsj 3000000 \
--outFilterMismatchNoverReadLmax 0.05 \
+--outFilterMismatchNoverReadLmax 0.05 \
 --alignSJoverhangMin 8 \
 --alignSJDBoverhangMin 1 \
 --sjdbScore 1  \
@@ -69,4 +69,4 @@ ls *.deduped.bam | grep '' > bamlist.list
 
 python3 $script_dir/SpliceJunctionDiscovery.py -transcriptFile=transcript_file.bed -bamList=bamlist.list -processes=$processes_N
 
-python $script_dir/NormalizeSpliceJunctionValues.py -transcript_model=transcript_model_dir/gencode.comprehensive.splice.junctions.txt -splice_file=All.transcript_file.bed.splicing.list --normalize > $(date +"%Y%d%b%T").normalised.junctions
+python $script_dir/NormalizeSpliceJunctionValues.py -transcript_model=$transcript_model_dir/gencode.comprehensive.splice.junctions.txt -splice_file=All.transcript_file.bed.splicing.list --normalize > $(date +"%Y%d%b%T").normalised.junctions
