@@ -1,5 +1,6 @@
 # RNA-seq #
-RNA-seq pipeline based on Beryl Cummings' and Dennis Kao's methods.
+
+Based on git repo https://github.com/broadinstitute/gtex-pipeline/tree/master/rnaseq
 
 This pipeline is designed to be flexible to the user's directory structure, and require minimal user input once configured. It will use STAR to align Illumina RNA-seq fastq files using 2-pass mode, which is more sensitive to novel splice junction discovery. It is written with the assumption of 150bp unpaired reads. It will then deduplicate your samples (picard tools), and use Dennis Kao's update of SpliceJunctionDiscovery.py and SpliceJunctionNormalization.py. the deduplication step is parallelised with GNU parallel. 
 
