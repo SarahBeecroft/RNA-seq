@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ID_list="D18_1066 03-D11-313-MK.Aligned.out"
+parallel -j5 --no-notice \
+        ./mark_dup.sh \
+        ::: $ID_list
+
+#for sample in $ID_list; do
+#       (echo $sample; sleep 5; echo "${sample}_v2") &
+#done
