@@ -4,11 +4,7 @@
 base_dir=/data/RNAseq/Broad_gtex
 data_dir=$base_dir/data
 Gencode_genomeDir=$base_dir/genome_index
-
-
 ID_list=$(ls $data_dir | grep 'fastq.gz' | cut -d'_' -f1 | uniq)
-thread_N=3
-processes_N=12
 
 
 echo 'samples included in this processing batch are' $ID_list
