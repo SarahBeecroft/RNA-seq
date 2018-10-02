@@ -8,4 +8,4 @@ set -x
         $base_dir/rsem_reference \
         $data_dir/star_out/$1.Aligned.toTranscriptome.out.bam \
         $data_dir/$1 \
-        --threads 4
+--threads 4

@@ -1,30 +1,64 @@
 #!/bin/bash
-##wrapper around Broad's run_STAR.py script downloaded from their git repo and used to process the Gtex samples
 
 base_dir=/data/RNAseq/Broad_gtex
 data_dir=$base_dir/data
 Gencode_genomeDir=$base_dir/genome_index
+transcript_model_dir=/data/RNAseq/MendelianRNA-seq
 ID_list=$(ls $data_dir | grep 'fastq.gz' | cut -d'_' -f1 | uniq)
 
+set -x
 
 echo 'samples included in this processing batch are' $ID_list
 echo 'start STAR alignment'
-for sample in $(echo $ID_list)
-do
 
+for sample in $(echo $ID_list) ; do
 fastq_input=$(ls $data_dir | grep $sample | paste -s -d, -)
+echo 'samples included in this processing batch are' $ID_list
+echo 'start' $sample 'Two pass mode processing'
 
-python3 $base_dir/run_STAR.py \
-        $data_dir/$fastq_input \
-        $sample \
-        --threads 3 \
-        --prefix $sample.
-        --output_dir $data_dir/star_out \
-        && mv /tmp/star_out /data/star_out
+STAR --genomeDir $Gencode_genomeDir \
+--readFilesCommand zcat \
+--twopassMode Basic \
+--readFilesIn $fastq_input \
+--outFileNamePrefix $sample. \
+--sjdbOverhang 149 \
+--alignSoftClipAtReferenceEnds No \
+--runThreadN $thread_N \
+--limitBAMsortRAM 38000000000 \
+--outSAMtype BAM Unsorted \
+--outSAMunmapped Within \
+--outSAMmapqUnique 60 \
+--outSAMattributes NH HI AS NM MD \
+--outFilterMultimapNmax 20 \
+--outFilterMismatchNmax 999 \
+--alignIntronMin 20 \
+--alignIntronMax 1000000 \
+--alignMatesGapMax 1000000 \
+--limitSjdbInsertNsj 3000000 \
+--outFilterMismatchNoverReadLmax 0.05 \
+--alignSJoverhangMin 8 \
+--alignSJDBoverhangMin 1 \
+--sjdbScore 1  \
+--outFilterScoreMinOverLread 0.33 \
+--outFilterMatchNminOverLread 0.33 \
+--chimJunctionOverhangMin 15
 done
 
-#Mark duplicates in parallel
 echo $ID_list > ID_LIST.txt
+
+# Sort BAM (use samtools to get around the memory gluttony of STAR) in parallel
+
+parallel -j5 --no-notice \
+        ./sort_bam.sh \
+        ::: ID_LIST.txt 
+
+# Index BAM in parallel
+
+parallel -j5 --no-notice \
+        ./index_bam.sh \
+        ::: ID_LIST.txt
+
+# Mark Duplicates in parallel
 
 parallel -j5 --no-notice \
         ./mark_dup.sh \
@@ -62,7 +96,7 @@ parallel -j5 --no-notice \
 
 # RSEM transcript quantification in parallel
 parallel -j5 --no-notice \
-        ./RNASeQC.sh \
+        ./RSEM_quant.sh \
         ::: ID_list.txt
 
 
@@ -78,14 +112,14 @@ parallel -j5 --no-notice \
 
 ls *.sorted.deduped.bam > bamlist.list
 
-#echo 'starting Splice Junction Discovery'
-#python3 $base_dir/SpliceJunctionDiscovery.py \
-#	-transcriptFile=transcript_file.bed \
-#	-bamList=bamlist.list \
-#	-processes=12
+echo 'starting Splice Junction Discovery'
+python3 $base_dir/SpliceJunctionDiscovery.py \
+	-transcriptFile=$base_dir/transcript_file.bed \
+	-bamList=bamlist.list \
+	-processes=12
 
-#echo 'Starting Normalization of splice junction values'
-#python $base_dir/NormalizeSpliceJunctionValues.py \
-#	-transcript_model=$base_dir/gencode.comprehensive.splice.junctions.txt \
-#	-splice_file=$base_dir/All.transcript_file.bed.splicing.list \
-#	--normalize > $(date +"%Y%d%b%T").normalised.junctions
+echo 'Starting Normalization of splice junction values'
+python $base_dir/NormalizeSpliceJunctionValues.py \
+	-transcript_model=$transcript_model_dir/gencode.comprehensive.splice.junctions.txt \
+	-splice_file=$base_dir/All.transcript_file.bed.splicing.list \
+	--normalize > $(date +"%Y%d%b%T").normalised.junctions
