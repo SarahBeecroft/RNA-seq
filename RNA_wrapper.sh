@@ -44,25 +44,23 @@ STAR --genomeDir $Gencode_genomeDir \
 --chimJunctionOverhangMin 15
 done
 
-echo $ID_list > ID_LIST.txt
-
 # Sort BAM (use samtools to get around the memory gluttony of STAR) in parallel
 
 parallel -j5 --no-notice \
         ./sort_bam.sh \
-        ::: ID_LIST.txt 
+        ::: *.Aligned.out.bam
 
 # Index BAM in parallel
 
 parallel -j5 --no-notice \
         ./index_bam.sh \
-        ::: ID_LIST.txt
+        ::: *.Aligned.sortedByCoord.out.bam
 
 # Mark Duplicates in parallel
 
 parallel -j5 --no-notice \
         ./mark_dup.sh \
-        ::: ID_LIST.txt
+        ::: *.Aligned.sortedByCoord.out.bam
 
 #Mark duplicates
 #for sample in $(echo $ID_list)
