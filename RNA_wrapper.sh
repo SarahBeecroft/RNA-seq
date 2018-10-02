@@ -79,7 +79,7 @@ parallel -j5 --no-notice \
 # RNA-SeQCin parallel
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: ID_LIST.txt
+        ::: *.Deduped.Aligned.sortedByCoord.out.bam
 
 #for sample in $(echo $ID_list)
 #do
@@ -95,7 +95,7 @@ parallel -j5 --no-notice \
 # RSEM transcript quantification in parallel
 parallel -j5 --no-notice \
         ./RSEM_quant.sh \
-        ::: ID_list.txt
+        ::: *.Deduped.Aligned.sortedByCoord.out.bam
 
 
 #for sample in $(echo $ID_list)
@@ -108,7 +108,7 @@ parallel -j5 --no-notice \
 #        --threads 4
 #done
 
-ls *.sorted.deduped.bam > bamlist.list
+ls *.Deduped.Aligned.sortedByCoord.out.bam > bamlist.list
 
 echo 'starting Splice Junction Discovery'
 python3 $base_dir/SpliceJunctionDiscovery.py \
