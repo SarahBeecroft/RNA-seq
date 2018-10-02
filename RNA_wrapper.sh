@@ -76,15 +76,16 @@ parallel -j5 --no-notice \
 #        --threads 4
 #done
 
+ls *.sorted.deduped.bam > bamlist.list
 
-echo 'starting Splice Junction Discovery'
-python3 $base_dir/SpliceJunctionDiscovery.py \
-	-transcriptFile=transcript_file.bed \
-	-bamList=bamlist.list\ 
-	-processes=12
+#echo 'starting Splice Junction Discovery'
+#python3 $base_dir/SpliceJunctionDiscovery.py \
+#	-transcriptFile=transcript_file.bed \
+#	-bamList=bamlist.list \
+#	-processes=12
 
-echo 'Starting Normalization of splice junction values'
-python $base_dir/NormalizeSpliceJunctionValues.py \
-	-transcript_model=$base_dir/gencode.comprehensive.splice.junctions.txt \
-	-splice_file=$base_dir/All.transcript_file.bed.splicing.list \
-	--normalize > $(date +"%Y%d%b%T").normalised.junctions
+#echo 'Starting Normalization of splice junction values'
+#python $base_dir/NormalizeSpliceJunctionValues.py \
+#	-transcript_model=$base_dir/gencode.comprehensive.splice.junctions.txt \
+#	-splice_file=$base_dir/All.transcript_file.bed.splicing.list \
+#	--normalize > $(date +"%Y%d%b%T").normalised.junctions
