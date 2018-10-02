@@ -23,10 +23,11 @@ python3 $base_dir/run_STAR.py \
 done
 
 #Mark duplicates in parallel
-ID_list=$(echo $ID_list)
+echo $ID_list > ID_LIST.txt
+
 parallel -j5 --no-notice \
         ./mark_dup.sh \
-        ::: $ID_list
+        ::: ID_LIST.txt
 
 #Mark duplicates
 #for sample in $(echo $ID_list)
@@ -43,10 +44,9 @@ parallel -j5 --no-notice \
 #done
 
 # RNA-SeQCin parallel
-ID_list=$(echo $ID_list)
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: $ID_list
+        ::: ID_LIST.txt
 
 #for sample in $(echo $ID_list)
 #do
@@ -60,10 +60,9 @@ parallel -j5 --no-notice \
 #done
 
 # RSEM transcript quantification in parallel
-ID_list=$(echo $ID_list)
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: $ID_list
+        ::: ID_list.txt
 
 
 #for sample in $(echo $ID_list)
