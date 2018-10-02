@@ -18,6 +18,7 @@ python3 $base_dir/run_STAR.py \
         $data_dir/$fastq_input \
         $sample \
         --threads 3 \
+        --prefix $sample.
         --output_dir $data_dir/star_out \
         && mv /tmp/star_out /data/star_out
 done
