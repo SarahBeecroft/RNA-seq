@@ -22,43 +22,59 @@ python3 $base_dir/run_STAR.py \
         && mv /tmp/star_out /data/star_out
 done
 
+#Mark duplicates in parallel
+ID_list=$(echo $ID_list)
+parallel -j5 --no-notice \
+        ./mark_dup.sh \
+        ::: $ID_list
 
 #Mark duplicates
-for sample in $(echo $ID_list)
-do
-echo 'marking duplicates for' $sample
-java -Djava.io.tmpdir=/data/tmp -jar ~/bin/picard.jar MarkDuplicates \
-    INPUT=$data_dir/$sample.Aligned.sortedByCoord.out.bam \
-    OUTPUT=$data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
-    METRICS_FILE=data_dir/$sample.sorted.deduped.metrics \
-    CREATE_INDEX=TRUE \
-    SORTING_COLLECTION_SIZE_RATIO=0.1 \
-    ASSUME_SORTED=TRUE \
-    VALIDATION_STRINGENCY=LENIENT
-done
+#for sample in $(echo $ID_list)
+#do
+#echo 'marking duplicates for' $sample
+#java -Djava.io.tmpdir=/data/tmp -jar ~/bin/picard.jar MarkDuplicates \
+#    INPUT=$data_dir/$sample.Aligned.sortedByCoord.out.bam \
+#    OUTPUT=$data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
+#    METRICS_FILE=data_dir/$sample.sorted.deduped.metrics \
+#    CREATE_INDEX=TRUE \
+#    SORTING_COLLECTION_SIZE_RATIO=0.1 \
+#    ASSUME_SORTED=TRUE \
+#    VALIDATION_STRINGENCY=LENIENT
+#done
 
-# RNA-SeQC
-for sample in $(echo $ID_list)
-do
-echo 'RNA-SeQC for ' $sample
-python run_rnaseqc.py \
-    $data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
-    $base_dir/gencode.v19.annotation.patched_contigs.gtf \
-    $base_dir/rsem_reference/rsem_reference.transcripts.fa \
-    $sample \
-    --output_dir $data_dir
-done
+# RNA-SeQCin parallel
+ID_list=$(echo $ID_list)
+parallel -j5 --no-notice \
+        ./RNASeQC.sh \
+        ::: $ID_list
 
-# RSEM transcript quantification
-for sample in $(echo $ID_list)
-do
-echo 'RSEM quantification for ' $sample
-python run_RSEM.py \
-        $base_dir/rsem_reference \
-        $data_dir/star_out/$sample.Aligned.toTranscriptome.out.bam \
-        $data_dir/$sample \
-        --threads 4
-done
+#for sample in $(echo $ID_list)
+#do
+#echo 'RNA-SeQC for ' $sample
+#python run_rnaseqc.py \
+#    $data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
+#    $base_dir/gencode.v19.annotation.patched_contigs.gtf \
+#    $base_dir/rsem_reference/rsem_reference.transcripts.fa \
+#    $sample \
+#    --output_dir $data_dir
+#done
+
+# RSEM transcript quantification in parallel
+ID_list=$(echo $ID_list)
+parallel -j5 --no-notice \
+        ./RNASeQC.sh \
+        ::: $ID_list
+
+
+#for sample in $(echo $ID_list)
+#do
+#echo 'RSEM quantification for ' $sample
+#python run_RSEM.py \
+#        $base_dir/rsem_reference \
+#        $data_dir/star_out/$sample.Aligned.toTranscriptome.out.bam \
+#        $data_dir/$sample \
+#        --threads 4
+#done
 
 
 echo 'starting Splice Junction Discovery'
@@ -66,7 +82,6 @@ python3 $base_dir/SpliceJunctionDiscovery.py \
 	-transcriptFile=transcript_file.bed \
 	-bamList=bamlist.list\ 
 	-processes=12
-
 
 echo 'Starting Normalization of splice junction values'
 python $base_dir/NormalizeSpliceJunctionValues.py \
