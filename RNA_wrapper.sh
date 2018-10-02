@@ -5,7 +5,7 @@ data_dir=$base_dir/data
 Gencode_genomeDir=$base_dir/genome_index
 transcript_model_dir=/data/RNAseq/MendelianRNA-seq
 ID_list=$(ls $data_dir | grep 'fastq.gz' | cut -d'_' -f1 | uniq)
-
+$thread_N=3
 set -x
 
 echo 'samples included in this processing batch are' $ID_list
