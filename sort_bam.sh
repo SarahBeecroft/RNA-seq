@@ -2,4 +2,4 @@
 set -x
 echo "$1 file"
 
-samtools sort  -o Sorted.$1 $1
+samtools sort  -o sortedByCoord.$1 $1
