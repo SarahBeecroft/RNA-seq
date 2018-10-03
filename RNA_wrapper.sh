@@ -45,31 +45,33 @@ done
 
 # Sort BAM (use samtools to get around the memory gluttony of STAR) in parallel
 
-parallel -j5 --no-notice \
-        ./sort_bam.sh \
-        ::: *.Aligned.out.bam
+parallel --no-notice 'samtools sort {} > {.}.sortedByCoord.bam' ::: *.bam
 
 # Mark Duplicates in parallel
 
-parallel -j5 --no-notice \
-        ./mark_dup.sh \
-        ::: *.sortedByCoord.*.Aligned.out.bam
+parallel --no-notice \
+	"java '-Djava.io.tmpdir=/data/tmp' -jar ~/bin/picard.jar MarkDuplicates \
+        INPUT={} \
+        METRICS_FILE={}.MarkDup.metrics \
+        CREATE_INDEX=TRUE \
+        SORTING_COLLECTION_SIZE_RATIO=0.1 \
+        ASSUME_SORTED=TRUE \
+	VALIDATION_STRINGENCY=LENIENT \
+	> {.}.DeDuped.bam" ::: *.sortedByCoord.bam
 	
 # Index BAM in parallel
 
-parallel -j5 --no-notice \
-        ./index_bam.sh \
-        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
+parallel --no-notice 'samtools index {}' ::: *.DeDuped.bam
 
 # RNA-SeQCin parallel
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
+        ::: *.DeDuped.bam
 
 # RSEM transcript quantification in parallel
 parallel -j5 --no-notice \
         ./RSEM_quant.sh \
-        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
+        ::: *.DeDuped.bam
 
 ls *.Deduped.Aligned.sortedByCoord.out.bam > bamlist.list
 
