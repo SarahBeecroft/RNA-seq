@@ -49,63 +49,27 @@ parallel -j5 --no-notice \
         ./sort_bam.sh \
         ::: *.Aligned.out.bam
 
-# Index BAM in parallel
-
-parallel -j5 --no-notice \
-        ./index_bam.sh \
-        ::: *.Aligned.sortedByCoord.out.bam
-
 # Mark Duplicates in parallel
 
 parallel -j5 --no-notice \
         ./mark_dup.sh \
-        ::: *.Aligned.sortedByCoord.out.bam
+        ::: *.sortedByCoord.Aligned.out.bam
+	
+# Index BAM in parallel
 
-#Mark duplicates
-#for sample in $(echo $ID_list)
-#do
-#echo 'marking duplicates for' $sample
-#java -Djava.io.tmpdir=/data/tmp -jar ~/bin/picard.jar MarkDuplicates \
-#    INPUT=$data_dir/$sample.Aligned.sortedByCoord.out.bam \
-#    OUTPUT=$data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
-#    METRICS_FILE=data_dir/$sample.sorted.deduped.metrics \
-#    CREATE_INDEX=TRUE \
-#    SORTING_COLLECTION_SIZE_RATIO=0.1 \
-#    ASSUME_SORTED=TRUE \
-#    VALIDATION_STRINGENCY=LENIENT
-#done
+parallel -j5 --no-notice \
+        ./index_bam.sh \
+        ::: *.Deduped.sortedByCoord.Aligned.out.bam
 
 # RNA-SeQCin parallel
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: *.Deduped.Aligned.sortedByCoord.out.bam
-
-#for sample in $(echo $ID_list)
-#do
-#echo 'RNA-SeQC for ' $sample
-#python run_rnaseqc.py \
-#    $data_dir/$sample.Aligned.sortedByCoord.out.patched.md.bam \
-#    $base_dir/gencode.v19.annotation.patched_contigs.gtf \
-#    $base_dir/rsem_reference/rsem_reference.transcripts.fa \
-#    $sample \
-#    --output_dir $data_dir
-#done
+        ::: *.Deduped.sortedByCoord.Aligned.out.bam
 
 # RSEM transcript quantification in parallel
 parallel -j5 --no-notice \
         ./RSEM_quant.sh \
         ::: *.Deduped.Aligned.sortedByCoord.out.bam
-
-
-#for sample in $(echo $ID_list)
-#do
-#echo 'RSEM quantification for ' $sample
-#python run_RSEM.py \
-#        $base_dir/rsem_reference \
-#        $data_dir/star_out/$sample.Aligned.toTranscriptome.out.bam \
-#        $data_dir/$sample \
-#        --threads 4
-#done
 
 ls *.Deduped.Aligned.sortedByCoord.out.bam > bamlist.list
 
