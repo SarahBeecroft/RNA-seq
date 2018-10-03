@@ -53,23 +53,23 @@ parallel -j5 --no-notice \
 
 parallel -j5 --no-notice \
         ./mark_dup.sh \
-        ::: *.sortedByCoord.Aligned.out.bam
+        ::: *.sortedByCoord.*.Aligned.out.bam
 	
 # Index BAM in parallel
 
 parallel -j5 --no-notice \
         ./index_bam.sh \
-        ::: *.Deduped.sortedByCoord.Aligned.out.bam
+        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
 
 # RNA-SeQCin parallel
 parallel -j5 --no-notice \
         ./RNASeQC.sh \
-        ::: *.Deduped.sortedByCoord.Aligned.out.bam
+        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
 
 # RSEM transcript quantification in parallel
 parallel -j5 --no-notice \
         ./RSEM_quant.sh \
-        ::: *.Deduped.Aligned.sortedByCoord.out.bam
+        ::: *.Deduped.sortedByCoord.*.Aligned.out.bam
 
 ls *.Deduped.Aligned.sortedByCoord.out.bam > bamlist.list
 
